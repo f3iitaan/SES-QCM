@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Révision SES – Bac</title>
+<style>
+  :root {
+    --eco: #3b82f6;
+    --pol: #8b5cf6;
+    --soc: #10b981;
+    --rg:  #f59e0b;
+    --bg:  #0f172a;
+    --card:#1e293b;
+    --text:#e2e8f0;
+    --muted:#94a3b8;
+    --correct:#22c55e;
+    --wrong:#ef4444;
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; min-height:100vh; }
+
+  /* ── HOME ── */
+  #home { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:2rem; text-align:center; }
+  #home h1 { font-size:2.5rem; font-weight:800; margin-bottom:.5rem; }
+  #home p  { color:var(--muted); margin-bottom:2.5rem; font-size:1.1rem; }
+  .theme-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.2rem; width:100%; max-width:900px; }
+  .theme-card { background:var(--card); border-radius:1rem; padding:1.8rem 1.4rem; cursor:pointer; border:2px solid transparent; transition:transform .2s,border-color .2s; }
+  .theme-card:hover { transform:translateY(-4px); }
+  .theme-card .icon { font-size:2.8rem; margin-bottom:.8rem; }
+  .theme-card h2 { font-size:1rem; font-weight:700; margin-bottom:.3rem; }
+  .theme-card p  { font-size:.82rem; color:var(--muted); }
+  .eco { border-color:var(--eco); } .eco .icon,.eco h2 { color:var(--eco); }
+  .pol { border-color:var(--pol); } .pol .icon,.pol h2 { color:var(--pol); }
+  .soc { border-color:var(--soc); } .soc .icon,.soc h2 { color:var(--soc); }
+  .rg  { border-color:var(--rg);  } .rg  .icon,.rg  h2 { color:var(--rg);  }
+
+  /* ── CHAPTER SELECTOR ── */
+  #chapter-select { display:none; min-height:100vh; padding:2rem; }
+  .back-btn { background:none; border:1px solid var(--muted); color:var(--muted); padding:.45rem 1rem; border-radius:.5rem; cursor:pointer; margin-bottom:1.5rem; font-size:.9rem; }
+  .back-btn:hover { color:var(--text); border-color:var(--text); }
+  #chapter-select h2 { font-size:1.8rem; margin-bottom:1.5rem; }
+  .chapter-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; max-width:900px; }
+  .chap-btn { background:var(--card); border:1px solid #334155; border-radius:.8rem; padding:1.2rem; cursor:pointer; text-align:left; color:var(--text); font-size:.9rem; transition:border-color .2s; }
+  .chap-btn:hover { border-color:var(--muted); }
+  .chap-btn span { display:block; font-size:.75rem; color:var(--muted); margin-top:.3rem; }
+
+  /* ── QUIZ ── */
+  #quiz { display:none; min-height:100vh; padding:2rem; max-width:820px; margin:0 auto; }
+  .progress-bar { background:#1e293b; border-radius:999px; height:8px; margin-bottom:1.5rem; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:999px; transition:width .3s; }
+  .q-counter { font-size:.85rem; color:var(--muted); margin-bottom:.5rem; }
+  .question-card { background:var(--card); border-radius:1rem; padding:1.8rem; margin-bottom:1.2rem; }
+  .question-card h3 { font-size:1.05rem; line-height:1.55; margin-bottom:1.2rem; }
+  .options { display:flex; flex-direction:column; gap:.65rem; }
+  .opt-btn { background:#0f172a; border:1.5px solid #334155; border-radius:.7rem; padding:.9rem 1.1rem; cursor:pointer; text-align:left; color:var(--text); font-size:.9rem; transition:border-color .2s,background .2s; line-height:1.4; }
+  .opt-btn:hover:not(:disabled) { border-color:#64748b; background:#1e293b; }
+  .opt-btn.correct { border-color:var(--correct)!important; background:#052e16!important; color:var(--correct)!important; }
+  .opt-btn.wrong   { border-color:var(--wrong)!important;   background:#2d0a0a!important; color:var(--wrong)!important;   }
+  .opt-btn.reveal  { border-color:var(--correct)!important; background:#052e16!important; opacity:.7; }
+  .explanation { background:#1e293b; border-left:3px solid #64748b; border-radius:.5rem; padding:1rem; font-size:.88rem; color:var(--muted); line-height:1.6; margin-top:.5rem; }
+  .explanation strong { color:var(--text); }
+  #next-btn { margin-top:1.2rem; padding:.8rem 2rem; border:none; border-radius:.7rem; cursor:pointer; font-size:.95rem; font-weight:700; display:none; }
+
+  /* ── RESULT ── */
+  #result { display:none; min-height:100vh; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:2rem; }
+  .score-circle { width:160px; height:160px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; font-size:2.8rem; font-weight:800; margin:1.5rem auto; border:6px solid; }
+  .score-circle span { font-size:.9rem; font-weight:400; margin-top:-.3rem; }
+  #result h2 { font-size:1.9rem; margin-bottom:.5rem; }
+  #result p  { color:var(--muted); margin-bottom:2rem; font-size:1rem; }
+  .result-btns { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; }
+  .result-btns button { padding:.75rem 1.5rem; border-radius:.7rem; cursor:pointer; font-size:.95rem; font-weight:600; border:none; }
+  #retry-btn  { background:#1e293b; color:var(--text); border:1.5px solid #334155; }
+  #home-btn2  { background:#1e293b; color:var(--text); border:1.5px solid #334155; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home">
+  <h1>📚 Révision SES</h1>
+  <p>Choisis un grand thème pour commencer à réviser</p>
+  <div class="theme-grid">
+    <div class="theme-card eco" onclick="showChapters('eco')">
+      <div class="icon">📈</div>
+      <h2>Sciences Économiques</h2>
+      <p>Marchés, monnaie, financement, assurance</p>
+    </div>
+    <div class="theme-card pol" onclick="showChapters('pol')">
+      <div class="icon">🗳️</div>
+      <h2>Sciences Politiques</h2>
+      <p>Vote, opinion publique, démocratie</p>
+    </div>
+    <div class="theme-card soc" onclick="showChapters('soc')">
+      <div class="icon">👥</div>
+      <h2>Sciences Sociales</h2>
+      <p>Socialisation, liens sociaux, déviance</p>
+    </div>
+    <div class="theme-card rg" onclick="showChapters('rg')">
+      <div class="icon">🔗</div>
+      <h2>Regards Croisés</h2>
+      <p>Questions transversales toutes matières</p>
+    </div>
+  </div>
+</div>
+
+<!-- CHAPTER SELECT -->
+<div id="chapter-select">
+  <button class="back-btn" onclick="goHome()">← Retour</button>
+  <h2 id="cs-title"></h2>
+  <div class="chapter-list" id="chapter-list"></div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz">
+  <button class="back-btn" onclick="goBack()">← Retour</button>
+  <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+  <div class="q-counter" id="q-counter"></div>
+  <div class="question-card">
+    <h3 id="q-text"></h3>
+    <div class="options" id="options"></div>
+    <div class="explanation" id="expl" style="display:none"></div>
+  </div>
+  <button id="next-btn" onclick="nextQuestion()">Question suivante →</button>
+</div>
+
+<!-- RESULT -->
+<div id="result" style="display:flex; display:none;">
+  <h2 id="res-title"></h2>
+  <p id="res-sub"></p>
+  <div class="score-circle" id="score-circle">
+    <span id="score-num"></span>
+    <span>/ 20</span>
+  </div>
+  <p id="res-msg"></p>
+  <div class="result-btns" style="margin-top:1.5rem">
+    <button id="retry-btn" onclick="retryQuiz()">🔄 Réessayer</button>
+    <button id="home-btn2" onclick="goHome()">🏠 Accueil</button>
+  </div>
+</div>
+
+<script>
+const THEMES = {
+  eco: { label:"Sciences Économiques", color:"var(--eco)", chapters:[
+    "Risques, assurance & protection sociale",
+    "Financement des agents économiques",
+    "Marchés imparfaitement concurrentiels",
+    "Monnaie & création monétaire",
+    "Marché concurrentiel",
+    "Défaillances du marché"
+  ]},
+  pol: { label:"Sciences Politiques", color:"var(--pol)", chapters:[
+    "Voter : affaire individuelle ou collective ?",
+    "Formation & expression de l'opinion publique"
+  ]},
+  soc: { label:"Sciences Sociales", color:"var(--soc)", chapters:[
+    "Déviance & processus sociaux",
+    "Liens sociaux",
+    "Socialisation & comportements"
+  ]},
+  rg:  { label:"Regards Croisés", color:"var(--rg)", chapters:[
+    "Regards croisés – Toutes thématiques"
+  ]}
+};
+
+/* ══════════════════════════════════════
+   QUESTIONS BANK
+══════════════════════════════════════ */
+const QUESTIONS = {
+
+  /* ── ECO 0 : Risques ── */
+  "eco-0": [
+    { q:"Qu'est-ce qu'un risque social ?", opts:["Un risque lié uniquement aux accidents de travail","Un événement pouvant survenir et dégrader les conditions de vie d'un individu, nécessitant une prise en charge","Un risque provoqué volontairement par un individu","Un risque exclusivement financier"], ans:1, exp:"Les risques sociaux (maladie, vieillesse, chômage, accident) peuvent dégrader le niveau de vie et nécessitent une prise en charge collective ou individuelle." },
+    { q:"La mutualisation des risques consiste à :", opts:["Chaque individu paie seul en cas de sinistre","Répartir les risques entre les membres d'un groupe pour diminuer la charge individuelle","Éliminer totalement les risques","Transférer le risque à l'État"], ans:1, exp:"La mutualisation = partage du risque entre membres d'un groupe. Chacun verse une prime, les sinistres des uns sont couverts par les cotisations de tous." },
+    { q:"Quelle est la différence entre logique d'assurance et logique d'assistance ?", opts:["L'assurance couvre tout le monde, l'assistance seulement les cotisants","L'assurance dépend des cotisations (redistribution horizontale), l'assistance aide les plus démunis sans contrepartie (redistribution verticale)","Il n'y a aucune différence","L'assistance est privée, l'assurance est publique"], ans:1, exp:"Logique d'assurance = cotisation obligatoire, redistribution horizontale. Logique d'assistance = aide sans contrepartie aux plus démunis, redistribution verticale (ex : RSA)." },
+    { q:"Qu'est-ce que l'aléa moral dans le domaine de l'assurance ?", opts:["Le fait de ne pas s'assurer","Après signature d'un contrat, l'assuré prend plus de risques car il sait être couvert","Une fraude à l'assurance","Un risque que l'assureur ne peut pas couvrir"], ans:1, exp:"L'aléa moral : après la signature du contrat, l'une des parties change son comportement à l'insu et au détriment de l'autre. Ex : conduire plus imprudemment car on est assuré." },
+    { q:"Les prestations sociales sont :", opts:["Des cotisations versées par les salariés","Des revenus en nature ou en espèces versés aux ménages confrontés à un risque couvert","Des impôts prélevés par l'État","Des primes versées aux assureurs"], ans:1, exp:"Prestations sociales = revenus accordés (ex : retraite, allocations chômage, remboursement de médicaments) aux ménages confrontés à un risque social." },
+    { q:"Quel dispositif décourage l'aléa moral dans les assurances ?", opts:["L'augmentation des primes pour tous","La franchise (part du dommage à la charge de l'assuré) et le malus","La suppression des contrats","Le remboursement intégral systématique"], ans:1, exp:"La franchise et le malus responsabilisent l'assuré : il garde une part du risque financier, ce qui l'incite à ne pas prendre de risques supplémentaires." },
+    { q:"La diversification des risques par les assureurs signifie :", opts:["Ils n'assurent qu'un seul type de risque","Ils assurent différents risques qui ne se réalisent pas tous simultanément","Ils augmentent les primes chaque année","Ils font appel à l'État en cas de crise"], ans:1, exp:"En assurant des risques variés (voiture, habitation, santé...), l'assureur réduit la probabilité que tous se réalisent en même temps, stabilisant ainsi ses comptes." },
+    { q:"Quel est le rôle de la famille dans la gestion des risques sociaux ?", opts:["La famille ne joue aucun rôle","La famille est une instance de solidarité qui aide ses membres en cas de chômage, maladie ou vieillesse","La famille remplace entièrement la sécurité sociale","La famille perçoit des primes d'assurance"], ans:1, exp:"Traditionnellement, la famille joue un rôle d'entraide mutuelle et de solidarité intergénérationnelle, notamment quand les autres institutions sont insuffisantes." },
+    { q:"Quels facteurs influencent l'exposition aux risques sociaux ?", opts:["Uniquement les comportements individuels","L'âge, le niveau d'éducation, le type de métier, le lieu de vie et les comportements individuels","Uniquement les caractéristiques sociales","Uniquement le lieu de résidence"], ans:1, exp:"L'exposition dépend des groupes sociaux (âge, diplôme, métier, lieu de vie) ET des comportements (aversion au risque ou propension au risque)." },
+    { q:"La prévention se définit comme :", opts:["L'ensemble des mesures destinées à indemniser les victimes d'un risque","L'ensemble des mesures et attitudes destinées à empêcher un risque de se réaliser","La prise en charge collective des risques","Le remboursement des frais médicaux"], ans:1, exp:"La prévention vise à éviter que le risque se réalise (ex : se laver les mains, porter sa ceinture de sécurité). Elle est distincte de la couverture du risque une fois réalisé." },
+  ],
+
+  /* ── ECO 1 : Financement ── */
+  "eco-1": [
+    { q:"Un agent en besoin de financement est :", opts:["Un agent dont les revenus sont supérieurs aux dépenses","Un agent dont les revenus sont inférieurs aux dépenses","Un agent qui épargne","Un agent qui prête de l'argent"], ans:1, exp:"Besoin de financement = revenus < dépenses. L'agent doit trouver des ressources externes (emprunt, émission d'actions...)." },
+    { q:"L'autofinancement d'une entreprise correspond à :", opts:["Financer ses dépenses grâce à des emprunts bancaires","Financer ses dépenses par sa propre épargne (excédent brut d'exploitation)","Émettre des actions en bourse","Emprunter auprès d'autres entreprises"], ans:1, exp:"L'autofinancement = financement par l'épargne propre de l'entreprise, constituée à partir des bénéfices (EBE) après déduction des dividendes, intérêts et impôts." },
+    { q:"Qu'est-ce qu'une obligation ?", opts:["Un titre de propriété d'une entreprise","Un titre de créance sur un emprunteur (entreprise ou État) donnant droit à un remboursement + intérêts","Un compte épargne bancaire","Une cotisation sociale"], ans:1, exp:"Une obligation = titre de créance. L'acheteur prête de l'argent à l'émetteur qui s'engage à le rembourser avec intérêts. Contrairement à l'action, il ne devient pas propriétaire." },
+    { q:"Le taux d'intérêt sur le marché des fonds prêtables représente :", opts:["Le taux d'inflation","Le prix d'équilibre entre l'offre et la demande de fonds prêtables","Le taux de croissance économique","Le taux de chômage"], ans:1, exp:"Le taux d'intérêt est le prix qui se fixe sur le marché des fonds prêtables, rémunérant le prêteur et représentant le coût de l'emprunt pour l'emprunteur." },
+    { q:"Le financement indirect passe par :", opts:["L'émission d'actions en bourse","Des intermédiaires financiers comme les banques qui collectent l'épargne et accordent des crédits","La vente d'obligations sur les marchés financiers","L'autofinancement"], ans:1, exp:"Financement indirect = intermédiation bancaire. Les banques collectent des dépôts et accordent des crédits. S'oppose au financement direct (marchés financiers)." },
+    { q:"L'effet d'éviction désigne :", opts:["La baisse des taux d'intérêt due à une politique monétaire expansionniste","L'État qui, en émettant des obligations, évince les entreprises privées des marchés financiers et hausse les taux d'intérêt","La faillite d'entreprises en période de récession","La réduction des dépenses publiques"], ans:1, exp:"Quand l'État émet massivement des obligations, les investisseurs se tournent vers ces titres jugés sûrs, réduisant les financements disponibles pour les entreprises privées et faisant monter les taux." },
+    { q:"La formule de l'épargne d'un ménage est :", opts:["Épargne = Revenus du travail – Impôts","Épargne = Revenu disponible – Consommation","Épargne = Chiffre d'affaires – Coûts de production","Épargne = Revenus – Dettes"], ans:1, exp:"Épargne = Revenu disponible – Consommations. Le revenu disponible = revenus du travail et de la propriété + aides sociales – prélèvements obligatoires." },
+    { q:"Une action est :", opts:["Un titre de créance sur une entreprise","Un titre de propriété sur une partie du capital d'une entreprise, donnant droit à des dividendes","Un emprunt bancaire","Un bon du Trésor"], ans:1, exp:"Action = titre de propriété. L'actionnaire possède une part de l'entreprise et reçoit des dividendes selon les bénéfices. Il n'a pas de droit au remboursement garanti." },
+    { q:"Qu'est-ce qu'un déficit budgétaire de l'État ?", opts:["Les recettes de l'État sont supérieures à ses dépenses","Les dépenses de l'État sont supérieures à ses recettes","L'État rembourse ses dettes","Le budget de l'État est à l'équilibre"], ans:1, exp:"Déficit budgétaire = dépenses > recettes. L'État doit alors emprunter (obligations, bons du Trésor) pour financer l'écart. Solde budgétaire = Recettes – Dépenses." },
+    { q:"L'excédent brut d'exploitation (EBE) se calcule comme :", opts:["Chiffre d'affaires – Dettes","Chiffre d'affaires – Coûts de production (consommations intermédiaires + salaires + impôts sur la production)","Revenus – Consommations","Bénéfice net – Impôts"], ans:1, exp:"EBE = CA – Consommations intermédiaires – Salaires – Impôts sur la production. C'est une mesure du profit brut de l'entreprise avant paiement des intérêts, dividendes et IS." },
+  ],
+
+  /* ── ECO 2 : Marchés imparfaits ── */
+  "eco-2": [
+    { q:"Le pouvoir de marché est la capacité d'une entreprise à :", opts:["Produire plus que ses concurrents","Fixer un prix au-dessus du prix d'équilibre concurrentiel","Réduire ses coûts de production","Obtenir des subventions de l'État"], ans:1, exp:"Pouvoir de marché = capacité à influencer les prix et à les fixer au-dessus du niveau concurrentiel, grâce à un nombre réduit d'offreurs, des barrières à l'entrée ou des ententes." },
+    { q:"Un monopole naturel est dû à :", opts:["Une décision du gouvernement","Des coûts fixes trop élevés rendant impossible la présence de plusieurs entreprises sur le marché","Une innovation technologique","Une entente entre entreprises"], ans:1, exp:"Le monopole naturel résulte de coûts fixes très importants (ex : réseau ferroviaire, distribution d'électricité) qui ne permettent pas la rentabilité de plusieurs entreprises simultanément." },
+    { q:"L'oligopole est une structure de marché avec :", opts:["Un seul offreur face à de nombreux demandeurs","Un petit nombre d'offreurs face à de nombreux acheteurs","De nombreux offreurs différenciés","Un seul demandeur"], ans:1, exp:"Oligopole = peu d'offreurs (ex : téléphonie mobile, construction aéronautique). Les entreprises sont interdépendantes et peuvent être tentées de former des cartels." },
+    { q:"Le dilemme du prisonnier montre que :", opts:["La coopération est toujours impossible","Des stratégies rationnelles individuellement peuvent mener à un résultat collectivement sous-optimal","Les entreprises ont toujours intérêt à se faire concurrence","L'État doit toujours intervenir dans les marchés oligopolistiques"], ans:1, exp:"En oligopole, si chaque entreprise choisit la stratégie qui maximise son profit individuel (baisser les prix), le résultat collectif est pire que si elles avaient coopéré (prix élevés)." },
+    { q:"Une entente (cartel) est :", opts:["Une fusion de deux entreprises","Un accord entre offreurs pour réduire la concurrence en fixant des prix communs ou en se répartissant les parts de marché","Une coentreprise légale","Une politique de l'État pour réguler les prix"], ans:1, exp:"Le cartel = accord illégal entre concurrents pour éviter de se faire concurrence (prix commun, répartition des marchés). Ex : en 2005, les 3 opérateurs mobiles français condamnés pour entente." },
+    { q:"La concentration horizontale consiste à :", opts:["Racheter des entreprises à différentes étapes de la chaîne de production","Racheter des entreprises dans le même domaine de production pour étendre son contrôle du marché","Fusionner avec un concurrent étranger uniquement","Créer des filiales dans de nouveaux secteurs"], ans:1, exp:"Concentration horizontale = rachat d'entreprises exerçant dans le même secteur. Ex : Carrefour a racheté Champion et Dia. Elle mène à des oligopoles ou monopoles." },
+    { q:"L'abus de position dominante consiste à :", opts:["Vendre plus cher que ses concurrents","Utiliser son pouvoir de marché pour restreindre la concurrence (prix prédateurs, pratiques discriminatoires…)","Avoir une part de marché supérieure à 50 %","Obtenir des brevets d'invention"], ans:1, exp:"L'abus de position dominante est interdit : une entreprise ne peut pas exploiter sa domination pour évincer les concurrents (ex : prix prédateurs = vendre à perte pour éliminer les rivaux)." },
+    { q:"En situation de monopole, le monopoleur produit :", opts:["La même quantité qu'en concurrence pure et parfaite","Moins et à un prix plus élevé qu'en concurrence, réduisant le surplus du consommateur","Plus et moins cher pour maximiser les ventes","Exactement ce que les consommateurs désirent"], ans:1, exp:"Le monopoleur est faiseur de prix. Il maximise son profit en réduisant la production et augmentant le prix, ce qui diminue le surplus du consommateur et crée une perte sèche." },
+    { q:"La concurrence monopolistique se caractérise par :", opts:["Un seul offreur","Des entreprises qui différencient leurs produits, disposant chacune d'un quasi-monopole sur leur produit","Une pluralité d'entreprises vendant des produits identiques","Un accord sur les prix entre concurrents"], ans:1, exp:"Concurrence monopolistique = beaucoup d'entreprises avec des produits différenciés (marque, qualité, design). Ex : restauration, vêtements. Chaque firme a un micro-monopole sur sa marque." },
+    { q:"Quelle institution surveille les concentrations et les ententes en France/Europe ?", opts:["La Banque Centrale Européenne","L'Autorité de la concurrence (France) et la Commission européenne (UE)","Le ministère des Finances","La Cour de cassation"], ans:1, exp:"L'Autorité de la concurrence (nationale) et la Commission européenne contrôlent les fusions-acquisitions et sanctionnent les ententes pour préserver la libre concurrence." },
+  ],
+
+  /* ── ECO 3 : Monnaie ── */
+  "eco-3": [
+    { q:"Les trois fonctions de la monnaie sont :", opts:["Épargner, investir, consommer","Intermédiaire des échanges, unité de compte, réserve de valeur","Payer les impôts, les salaires et les dettes","Créer du crédit, financer l'État, réguler l'inflation"], ans:1, exp:"La monnaie remplit 3 fonctions : intermédiaire des échanges (facilite les transactions), unité de compte (exprime les prix), réserve de valeur (peut être thésaurisée)." },
+    { q:"La monnaie scripturale est :", opts:["Les pièces et les billets","La monnaie inscrite sur des comptes bancaires, circulant par chèque, virement, carte bancaire","Les lingots d'or","Les crypto-monnaies exclusivement"], ans:1, exp:"Monnaie scripturale = écriture sur des comptes bancaires. C'est la forme dominante aujourd'hui (>80 % de la masse monétaire). Elle se transfère par chèque, virement, carte." },
+    { q:"Comment les banques commerciales créent-elles de la monnaie ?", opts:["En imprimant des billets","En accordant des crédits : les montants sont inscrits sur le compte du bénéficiaire (les crédits font les dépôts)","En collectant les dépôts des clients","En vendant des obligations d'État"], ans:1, exp:"\"Les crédits font les dépôts\" : quand une banque accorde un prêt, elle crée ex nihilo de la monnaie scripturale en inscrivant la somme au crédit du compte du client." },
+    { q:"Le rôle principal de la Banque Centrale Européenne (BCE) est :", opts:["Financer les déficits des États membres","Maintenir la stabilité des prix (inflation < 2 %) et conduire la politique monétaire","Prêter directement aux ménages et entreprises","Réglementer les marchés boursiers"], ans:1, exp:"Objectif principal de la BCE : stabilité des prix (inflation ≈ 2 %). Objectif secondaire : soutien à la croissance. Elle conduit la politique monétaire de la zone euro." },
+    { q:"Les taux d'intérêt directeurs sont :", opts:["Les taux auxquels les ménages empruntent à leur banque","Les taux auxquels les banques commerciales se refinancent auprès de la banque centrale","Les taux des obligations d'État","Les taux de change entre monnaies"], ans:1, exp:"Taux directeurs = taux de refinancement fixés par la BC. Ils influencent les taux pratiqués par les banques commerciales : baisse → crédit moins cher → plus d'investissement et consommation." },
+    { q:"Une politique monétaire expansionniste consiste à :", opts:["Augmenter les taux directeurs pour lutter contre l'inflation","Baisser les taux directeurs pour stimuler le crédit, l'investissement et la consommation","Réduire la masse monétaire en circulation","Augmenter les réserves obligatoires des banques"], ans:1, exp:"Politique expansionniste = baisse des taux directeurs → crédit moins cher → hausse de la demande (consommation + investissement) → croissance économique (mais risque d'inflation)." },
+    { q:"La destruction monétaire survient quand :", opts:["La banque centrale imprime de nouveaux billets","Un crédit est remboursé à la banque, faisant disparaître la monnaie créée","L'État réduit ses dépenses","Une banque fait faillite"], ans:1, exp:"La monnaie créée par le crédit disparaît quand le crédit est remboursé (le bilan de la banque revient à zéro pour cette opération) : c'est la destruction monétaire." },
+    { q:"Qu'est-ce que la masse monétaire ?", opts:["Uniquement les pièces et billets en circulation","La quantité totale de monnaie détenue par les agents économiques susceptible d'être convertie en moyen de paiement (M1, M2, M3)","Le PIB d'un pays","Les réserves d'or d'un pays"], ans:1, exp:"La masse monétaire comprend différents agrégats (M1 = pièces+billets+dépôts à vue, M2 ajoute les dépôts à court terme, M3 les titres OPCVM). Elle mesure la liquidité de l'économie." },
+    { q:"Le troc pose le problème de :", opts:["La déflation","La double coïncidence des besoins : il faut que les deux échangeurs aient besoin du bien de l'autre","L'inflation","L'excès de monnaie en circulation"], ans:1, exp:"Le troc nécessite que A veuille ce que B possède ET que B veuille ce que A possède simultanément. La monnaie supprime cette contrainte en servant d'intermédiaire universel." },
+    { q:"Un excès de monnaie en circulation peut entraîner :", opts:["La déflation et une crise économique","L'inflation (hausse des prix) si la production ne suit pas la hausse de la demande","Une baisse des taux d'intérêt directeurs","Une réduction du chômage sans aucun effet sur les prix"], ans:1, exp:"Excès de monnaie → hausse de la demande → si l'offre ne suit pas → inflation. C'est pourquoi la BCE vise à contrôler la masse monétaire pour maintenir la stabilité des prix." },
+  ],
+
+  /* ── ECO 4 : Marché concurrentiel ── */
+  "eco-4": [
+    { q:"Le prix d'équilibre sur un marché concurrentiel est :", opts:["Le prix maximum qu'un consommateur accepte de payer","Le prix auquel l'offre est égale à la demande","Le prix fixé par l'État","Le prix moyen pratiqué par les entreprises"], ans:1, exp:"Le prix d'équilibre (prix de marché) se forme à l'intersection des courbes d'offre et de demande, là où les quantités offertes = quantités demandées." },
+    { q:"La concurrence pure et parfaite requiert :", opts:["Peu d'offreurs et de demandeurs","Atomicité, homogénéité des produits, libre entrée/sortie, parfaite mobilité des facteurs, transparence de l'information","Existence de barrières à l'entrée","Un régulateur public pour fixer les prix"], ans:1, exp:"5 conditions de la CPP : atomicité (nombreux acteurs), homogénéité, libre entrée/sortie, parfaite mobilité des facteurs, transparence. Dans la réalité, ces conditions sont rarement réunies." },
+    { q:"Le surplus du consommateur représente :", opts:["Le profit de l'entreprise","La différence entre le prix maximum que le consommateur était prêt à payer et le prix d'équilibre effectivement payé","La taxe prélevée par l'État sur la transaction","Les dépenses totales du consommateur"], ans:1, exp:"Surplus du consommateur = prix de réservation (prix max accepté) – prix d'équilibre. Il mesure le gain que le consommateur retire de l'échange. Ex : prêt à payer 40 €, paie 30 € → surplus = 10 €." },
+    { q:"La loi de la demande stipule que :", opts:["Quand le prix augmente, la demande augmente","Quand le prix augmente, la demande diminue (relation décroissante)","La demande est indépendante du prix","La demande augmente toujours avec le revenu"], ans:1, exp:"Loi de la demande : prix ↑ → quantité demandée ↓. La courbe de demande est décroissante car plus un bien est cher, moins les consommateurs en achètent (effets substitution et revenu)." },
+    { q:"La loi de l'offre stipule que :", opts:["Quand le prix augmente, l'offre diminue","Quand le prix augmente, l'offre augmente (relation croissante)","L'offre est toujours fixe","L'offre dépend uniquement des coûts de production"], ans:1, exp:"Loi de l'offre : prix ↑ → quantité offerte ↑. La courbe d'offre est croissante car un prix plus élevé rend la production plus rentable." },
+    { q:"Le surplus du producteur est :", opts:["Le bénéfice net de l'entreprise","L'écart entre le prix d'équilibre reçu et le prix minimum auquel le producteur était prêt à vendre","Les coûts de production de l'entreprise","La taxe payée par l'entreprise à l'État"], ans:1, exp:"Surplus du producteur = prix d'équilibre – prix minimum auquel il était prêt à vendre. Ex : vend à 30 €, aurait accepté 20 € → surplus = 10 €. Il représente son gain à l'échange." },
+    { q:"Une taxe forfaitaire sur un marché à l'équilibre :", opts:["N'a aucun effet sur les prix","Fait augmenter le prix payé par le consommateur et diminuer les quantités échangées, réduisant le surplus total","Profite uniquement au producteur","Augmente la production"], ans:1, exp:"Une taxe déplace la courbe d'offre ou de demande : les quantités échangées diminuent, le prix augmente pour le consommateur, le surplus total est réduit (perte sèche = montant de la taxe)." },
+    { q:"Un marché est une institution car :", opts:["Il est toujours physique","Il repose sur des règles (droits de propriété, normes, lois) qui encadrent et coordonnent les échanges","Il est géré par l'État","Il implique toujours une monnaie d'échange"], ans:1, exp:"Le marché est une institution : il ne fonctionne que grâce à un cadre de règles (droit des contrats, normes sanitaires, droits de propriété...) qui sécurisent les échanges." },
+    { q:"La maximisation du profit par le producteur en CPP se fait quand :", opts:["Il produit le maximum possible","Le coût marginal est égal au prix de vente","Il vend au prix le plus élevé possible","Il réduit ses coûts fixes au maximum"], ans:1, exp:"En CPP, le producteur est preneur de prix. Il produit jusqu'à ce que le coût marginal (coût de la dernière unité) = prix de vente. Produire plus serait moins rentable." },
+    { q:"Parmi les trois types de marchés, lesquels existent ?", opts:["Marché des biens/services, marché du travail, marché des capitaux","Marché public, marché privé, marché mixte","Marché local, national, international","Marché monopolistique, oligopolistique, concurrentiel"], ans:0, exp:"3 grands types de marchés : biens et services (échanges de productions), travail (offre de travail contre rémunération), capitaux (produits financiers : monnaies, obligations, actions)." },
+  ],
+
+  /* ── ECO 5 : Défaillances du marché ── */
+  "eco-5": [
+    { q:"Une externalité est :", opts:["Le bénéfice d'une entreprise sur les marchés internationaux","La répercussion de l'activité économique d'un agent sur le bien-être d'un autre agent, sans compensation financière","Une taxe prélevée par l'État","Une subvention accordée aux entreprises innovantes"], ans:1, exp:"Externalité = effet non monétarisé de l'activité d'un agent sur d'autres agents. Elle peut être négative (pollution) ou positive (vaccination, recherche)." },
+    { q:"La pollution est un exemple d'externalité :", opts:["Positive","Négative","Neutre","Interne"], ans:1, exp:"Pollution = externalité négative : l'entreprise polluante impose un coût à la société (santé, environnement) sans le payer. Son coût privé < coût social → défaillance du marché." },
+    { q:"Un bien collectif est :", opts:["Un bien produit par l'État","Un bien non excluable et non rival (ex : défense nationale, éclairage public)","Un bien disponible en quantité limitée","Un bien dont le prix est fixé par le gouvernement"], ans:1, exp:"Bien collectif = non excluable (on ne peut empêcher personne d'en profiter) ET non rival (la consommation de l'un ne réduit pas celle des autres). Ex : air, phare, défense nationale." },
+    { q:"Le problème du passager clandestin signifie :", opts:["Les individus fraudent dans les transports en commun","Des individus profitent d'un bien collectif sans contribuer à son financement, ce qui décourage les producteurs privés","Les entreprises évitent de payer leurs impôts","Les consommateurs cherchent les prix les plus bas"], ans:1, exp:"Passager clandestin : comme on ne peut empêcher l'utilisation d'un bien non excluable, les individus n'ont pas intérêt à le payer. Les entreprises privées ne peuvent donc pas se rémunérer sur ces biens." },
+    { q:"La tragédie des biens communs est :", opts:["L'effondrement des marchés boursiers","La surexploitation des biens rivaux mais non excluables (ex : pêche) car chaque agent cherche à maximiser son usage avant les autres","La production insuffisante de biens publics","La monopolisation d'un marché par une seule entreprise"], ans:1, exp:"Biens communs (rivaux, non excluables) : chacun a intérêt à maximiser son usage avant les autres → surexploitation → épuisement de la ressource. Ex : surpêche, déforestation." },
+    { q:"La sélection adverse est :", opts:["Un mécanisme de sélection des meilleures entreprises par le marché","Une asymétrie d'information où les vendeurs en savent plus que les acheteurs, conduisant les bons produits à quitter le marché","La sélection des meilleurs candidats pour un emploi","Un biais de recrutement dans les entreprises"], ans:1, exp:"Sélection adverse (Akerlof, \"market for lemons\") : vendeurs > acheteurs en info → les acheteurs proposent un prix moyen → les bons produits quittent le marché → seuls les mauvais restent." },
+    { q:"L'asymétrie d'information est :", opts:["Une situation où tous les agents ont la même information","Une situation où un acteur dispose de moins d'informations qu'un autre, créant des inefficacités de marché","Une politique de transparence des entreprises","Un avantage concurrentiel lié à la connaissance du marché"], ans:1, exp:"Asymétrie d'information = l'une des parties (vendeur ou acheteur) possède des informations que l'autre n'a pas. Elle mène à l'aléa moral et à la sélection adverse." },
+    { q:"Pour corriger les externalités négatives, l'État peut :", opts:["Subventionner les entreprises polluantes","Taxer les pollueurs (taxe Pigouvienne), réglementer ou créer un marché de quotas d'émission","Interdire toute activité industrielle","Nationaliser les entreprises concernées"], ans:1, exp:"Pour internaliser l'externalité négative, l'État peut taxer (pollueur-payeur), réglementer (interdiction ou normes) ou créer un marché de quotas (ex : marché carbone européen depuis 2005)." },
+    { q:"Pourquoi l'État produit-il souvent les biens collectifs ?", opts:["Parce que les entreprises privées sont inefficaces","Parce que les biens collectifs sont non excluables : les entreprises privées ne peuvent pas se rémunérer (problème du passager clandestin)","Parce que l'État a des coûts de production inférieurs","Parce que les biens collectifs ne sont pas désirés par les individus"], ans:1, exp:"Les biens non excluables ne permettent pas aux entreprises privées de percevoir un prix (passager clandestin). L'État les finance donc via la fiscalité (impôts et taxes)." },
+    { q:"Pour lutter contre la sélection adverse, l'État peut :", opts:["Augmenter les prix","Rendre obligatoire certaines assurances ou imposer des certifications et labels réduisant l'asymétrie d'information","Privatiser les marchés concernés","Interdire la concurrence"], ans:1, exp:"Ex : l'assurance maladie obligatoire empêche la sélection adverse dans la santé. Les labels et certifications (contrôle technique) réduisent l'asymétrie d'info sur la qualité des produits." },
+  ],
+
+  /* ── POL 0 : Vote ── */
+  "pol-0": [
+    { q:"Le suffrage universel est :", opts:["Le droit de vote réservé aux propriétaires","Le droit de vote accordé à tous les citoyens sans condition de fortune, d'hérédité ou de capacité","Le droit de vote réservé aux hommes","Le vote obligatoire pour tous les citoyens"], ans:1, exp:"Suffrage universel = droit de vote sans condition. En France, il a été progressivement étendu : Révolution (principe inscrit), 1944-1945 (femmes et militaires), 1965 (direct pour le président)." },
+    { q:"Le taux d'abstention électorale est :", opts:["Le rapport entre le nombre de votants et le nombre d'inscrits","Le rapport entre le nombre d'abstentionnistes et le nombre d'inscrits sur les listes","Le rapport entre les votes blancs et les suffrages exprimés","Le rapport entre les non-inscrits et la population majeure"], ans:1, exp:"Taux d'abstention = abstentionnistes / inscrits. Il est complémentaire du taux de participation (participation + abstention = 100 % des inscrits). Ex : 2017 présidentielle 2e tour → 25,4 % d'abstention." },
+    { q:"L'abstention intermittente désigne :", opts:["Des électeurs qui ne votent jamais","Des électeurs qui participent à certaines élections et pas à d'autres selon l'enjeu perçu","Des électeurs qui votent blanc systématiquement","Des électeurs non inscrits sur les listes"], ans:1, exp:"Abstention intermittente = la majorité de l'abstention. L'électeur vote selon l'élection (présidentielle > européennes > municipales) en fonction de la perception de l'enjeu et de la conjoncture." },
+    { q:"Le modèle de Columbia (Lazarsfeld) soutient que :", opts:["Le vote est avant tout un choix rationnel basé sur les programmes","Un individu pense politiquement comme il est socialement (religion, classe, lieu de vie)","Le vote dépend exclusivement des médias","Les individus ne sont pas influencés par leur milieu social"], ans:1, exp:"Modèle de Columbia : les variables lourdes (religion, PCS, âge, genre, lieu de résidence) structurent le vote. \"Un individu pense politiquement comme il est socialement\" (Lazarsfeld)." },
+    { q:"Le paradigme de Michigan insiste sur :", opts:["L'importance du contexte économique","L'identification partisane : attachement affectif durable à un parti acquis par la socialisation","Les médias comme principal déterminant du vote","Le niveau de revenu comme facteur principal"], ans:1, exp:"Paradigme de Michigan : les électeurs développent une identification partisane (attachement affectif à un parti) via la socialisation. Ce lien stable détermine plus leur vote que les enjeux du moment." },
+    { q:"Le vote sur enjeux est un modèle selon lequel :", opts:["Le vote est déterminé par la classe sociale","L'électeur choisit en fonction des positions des candidats sur les questions du moment et du contexte particulier de chaque élection","Le vote est héréditaire","L'électeur vote toujours pour le même parti"], ans:1, exp:"Vote sur enjeux = approche individualiste/situationnelle. Chaque élection est différente ; les positions des candidats et le contexte (économique, social...) influencent le choix de l'électeur." },
+    { q:"La volatilité électorale désigne :", opts:["Le fait de toujours voter pour le même parti","Le changement de comportement électoral entre deux élections (changement de parti ou alternance vote/abstention)","La participation record à une élection","L'invalidation des bulletins de vote"], ans:1, exp:"Volatilité électorale ↑ depuis les années 1980 : moins d'identification partisane, identités sociales complexes, variables lourdes moins déterminantes → plus de vote sur enjeux et d'abstention intermittente." },
+    { q:"L'abstentionnisme politique (actif) est :", opts:["L'abstention due à un manque d'intérêt ou de compétence politique","Un refus délibéré de voter comme forme d'engagement politique (rejet du système ou de l'offre électorale)","L'oubli de s'inscrire sur les listes","L'impossibilité physique de se déplacer pour voter"], ans:1, exp:"Abstentionniste actif : instruit, intéressé par la politique, sentiment de compétence politique élevé mais refuse de légitimer le système ou les candidats proposés. ≠ abstentionniste passif (sociologique)." },
+    { q:"Quel facteur structurel est corrélé à une plus forte participation électorale ?", opts:["Habiter en zone urbaine","Avoir un emploi stable et un niveau de diplôme élevé","Être jeune","Être précaire ou chômeur"], ans:1, exp:"Facteurs structurels de participation : niveau de diplôme élevé, emploi stable, âge (les très jeunes et très âgés s'abstiennent plus), lieu de résidence (milieu rural < pôles urbains)." },
+    { q:"Qu'est-ce que le sentiment de compétence politique ?", opts:["Le sentiment d'être plus compétent que les élus","Le sentiment de comprendre suffisamment la vie politique pour donner légitimement son opinion et aller voter","La connaissance du droit constitutionnel","L'appartenance à un parti politique"], ans:1, exp:"Sentiment de compétence politique = sentiment de comprendre la politique et de pouvoir y participer légitimement. Son absence est un facteur majeur d'abstentionnisme, souvent corrélé au faible diplôme." },
+  ],
+
+  /* ── POL 1 : Opinion publique ── */
+  "pol-1": [
+    { q:"L'opinion publique est :", opts:["L'opinion officielle du gouvernement","L'ensemble des idées et convictions plus ou moins partagées par une société, véhiculée notamment par les médias","L'avis des experts et intellectuels uniquement","Le résultat d'un référendum"], ans:1, exp:"Opinion publique = ensemble des opinions partagées dans une société. Au XVIIIe siècle, elle émerge dans les élites éclairées ; au XIXe-XXe siècle, elle se démocratise via la presse, la radio, la TV et les sondages." },
+    { q:"Un sondage d'opinion est :", opts:["Un recensement exhaustif de toute la population","Une enquête statistique déterminant les opinions probables d'une population à partir d'un échantillon représentatif","Un vote légalement contraignant","Une consultation des experts du domaine"], ans:1, exp:"Sondage = technique statistique : on interroge un échantillon représentatif (~1000-2000 personnes) pour estimer l'opinion de l'ensemble de la population, avec une marge d'erreur." },
+    { q:"La méthode des quotas consiste à :", opts:["Interroger des personnes au hasard","Construire un échantillon représentatif en veillant à ce que chaque catégorie (âge, genre, PCS...) soit représentée proportionnellement à son poids dans la population","Interroger uniquement les personnes volontaires","Sélectionner les répondants par tirage au sort pur"], ans:1, exp:"Méthode des quotas : on compose l'échantillon en reproduisant la structure de la population selon des critères sociodémographiques. C'est la méthode la plus utilisée en France pour les sondages politiques." },
+    { q:"Selon Bourdieu (1973), « l'opinion publique n'existe pas » car :", opts:["Les sondages sont toujours fiables","Les sondages ne collectent pas une opinion préexistante mais fabriquent une opinion en forçant les individus à se positionner sur des sujets où ils n'en ont pas","Les médias contrôlent toutes les opinions","Les individus ont toujours une opinion sur tout"], ans:1, exp:"Bourdieu critique 3 postulats : (1) tout le monde a une opinion, (2) toutes les opinions se valent, (3) les questions posées reflètent les préoccupations réelles. Les sondages créent plus qu'ils ne mesurent." },
+    { q:"La marge d'erreur d'un sondage :", opts:["Indique le biais politique de l'institut","Est un intervalle dans lequel la vraie valeur se trouve avec un niveau de confiance donné (souvent 95 %)","Signifie que le sondage est invalide","Est toujours de 0 % si l'échantillon est bien construit"], ans:1, exp:"Marge d'erreur = intervalle de confiance. Ex : 50 % ± 3 % signifie qu'on est certain à 95 % que la vraie valeur est entre 47 % et 53 %. Plus l'échantillon est grand, plus la marge est faible." },
+    { q:"L'effet 'bandwagon' est :", opts:["Des électeurs qui soutiennent le candidat perdant par solidarité","Un candidat en tête des sondages devient encore plus populaire (soutien des supporters de la victoire)","La démobilisation des supporters du candidat favori","L'effet des médias sur le programme politique"], ans:1, exp:"Effet bandwagon (wagon de tête) : les électeurs se rallient au candidat perçu comme gagnant, amplifiant sa avance. L'inverse de l'effet underdog (soutien au candidat en difficulté)." },
+    { q:"La démocratie d'opinion est :", opts:["Une démocratie directe où les citoyens votent toutes les lois","Une forme de démocratie marquée par l'influence croissante des sondages et des médias sur les décisions politiques","Une démocratie sans partis politiques","Un régime où les experts gouvernent selon les sondages"], ans:1, exp:"Démocratie d'opinion : les sondages et médias occupent une place centrale, forçant les gouvernants à justifier constamment leurs choix. Risque de populisme et de politique de court terme." },
+    { q:"Les premiers sondages d'opinion modernes ont été créés par :", opts:["Pierre Bourdieu","John Luke Gallup lors des élections américaines de 1936","Paul Lazarsfeld en France","Alexis de Tocqueville au XIXe siècle"], ans:1, exp:"Gallup a inventé les sondages modernes en 1936 en prédisant la réélection de Roosevelt à partir d'un échantillon représentatif. Ses méthodes sont encore utilisées aujourd'hui." },
+    { q:"Le biais de désirabilité dans les sondages consiste à :", opts:["Choisir les répondants qui ont les opinions les plus extrêmes","Les répondants donnent une réponse qu'ils pensent valorisée socialement plutôt que leur vraie opinion","Poser des questions trop difficiles","Utiliser des samples trop petits"], ans:1, exp:"Biais de désirabilité : en face à face ou par téléphone, les répondants évitent les réponses jugées socialement inacceptables. Ex : le vote FN a souvent été sous-estimé dans les sondages." },
+    { q:"La communication à double étage (Lazarsfeld) signifie :", opts:["Les médias influencent directement et également tous les citoyens","Les médias influencent des 'leaders d'opinion' qui eux-mêmes influencent durablement leur entourage","Il faut deux canaux de communication pour être efficace","Les sondages nécessitent deux vagues d'interrogation"], ans:1, exp:"Two-step flow (Lazarsfeld) : les médias n'influencent pas directement la masse mais forment des 'leaders d'opinion' (personnes influentes dans leur réseau) qui relaient et amplifient les messages." },
+  ],
+
+  /* ── SOC 0 : Déviance ── */
+  "soc-0": [
+    { q:"La déviance en sociologie désigne :", opts:["Uniquement les crimes et délits","Les conduites qu'une société ou un groupe réprouve car jugées non conformes à ses normes ou valeurs","Les comportements anormaux au sens psychiatrique","Les comportements déviants par rapport à la moyenne statistique"], ans:1, exp:"Déviance = relativité sociologique. Ce n'est pas une propriété intrinsèque d'un acte mais une construction sociale : est déviant ce que le groupe désigne comme tel (Becker)." },
+    { q:"Le contrôle social est :", opts:["Uniquement l'action de la police et de la justice","L'ensemble des moyens par lesquels un groupe fait respecter ses normes, tant formel (institutions) qu'informel (pression sociale)","La surveillance électronique des citoyens","La censure des médias"], ans:1, exp:"Contrôle social = formel (police, justice, école, entreprise) + informel (famille, pairs, regards désapprobateurs, critiques). Il rend les comportements prévisibles et maintient la cohésion sociale." },
+    { q:"Les normes sociales sont :", opts:["Les règles inscrites dans la loi","Les règles non écrites d'un groupe social correspondant aux mœurs et habitudes (ex : politesse, codes vestimentaires)","Les lois votées par le Parlement","Les normes techniques industrielles"], ans:1, exp:"Normes sociales ≠ normes juridiques. Les normes sociales sont des règles implicites, propres à un groupe ou une société, qui évoluent dans le temps. Ex : s'habiller selon son genre, manger avec des couverts." },
+    { q:"L'anomie selon Durkheim est :", opts:["Un état de perfection sociale","Un dérèglement social dû à l'affaiblissement de l'influence des normes et valeurs sur les comportements individuels","Une forme de criminalité organisée","Un conflit entre groupes sociaux rivaux"], ans:1, exp:"Anomie (Durkheim) = affaiblissement des structures normatives (famille, religion, travail, État) qui assurent la cohésion. Les individus ne savent plus comment orienter leur conduite, ce qui favorise la déviance." },
+    { q:"Le processus d'étiquetage (Becker) consiste à :", opts:["Cataloguer les personnes selon leur catégorie socioprofessionnelle","Un groupe social désigne un acte ou une personne comme déviant(e), ce qui peut renforcer le comportement déviant de cette personne","Classer les infractions selon leur gravité","Identifier les délinquants pour la police"], ans:1, exp:"Étiquetage (Becker, Outsiders, 1963) : être désigné comme déviant par le groupe modifie l'identité sociale de l'individu, qui peut intégrer cet étiquetage et poursuivre dans la carrière déviante." },
+    { q:"La stigmatisation est :", opts:["Une récompense accordée à un individu exceptionnel","Un processus par lequel un individu, au nom de caractéristiques particulières, est disqualifié et mis à l'écart par le groupe","Un sondage sur les comportements sociaux","Un type de contrôle social formel"], ans:1, exp:"Stigmatisation (Goffman, Stigmate, 1963) : certains attributs (handicap, maladie mentale, orientation sexuelle...) servent de marqueurs de déconsidération, justifiant l'exclusion du groupe." },
+    { q:"La délinquance est :", opts:["Synonyme exact de déviance","Une forme particulière de déviance correspondant à la transgression de normes juridiques (contraventions, délits, crimes)","Tout comportement non conforme aux attentes","Un comportement statistiquement rare"], ans:1, exp:"Délinquance ⊂ déviance : toute délinquance est une déviance mais toute déviance n'est pas une délinquance. La délinquance est sanctionnée par la loi (infractions = contraventions < délits < crimes)." },
+    { q:"Le 'chiffre noir' de la délinquance est :", opts:["Le montant total des amendes","L'écart entre la délinquance réelle et la délinquance officiellement recensée (plaintes + condamnations)","Le nombre de récidivistes","Le coût de la délinquance pour l'économie"], ans:1, exp:"Chiffre noir : beaucoup d'infractions ne sont jamais portées à la connaissance de la police (non déclaration par honte, peur des représailles, sentiment que ça ne sert à rien). Les enquêtes de victimation tentent de l'estimer." },
+    { q:"Les enquêtes de victimation servent à :", opts:["Interroger les délinquants sur leurs actes","Demander à un échantillon représentatif s'ils ont été victimes d'infractions, pour mieux mesurer la délinquance réelle au-delà des statistiques policières","Évaluer l'efficacité de la police","Recenser les condamnations judiciaires"], ans:1, exp:"Enquêtes de victimation = outil complémentaire aux statistiques pénales. Elles révèlent les infractions non déclarées mais ne couvrent pas les crimes sans victimes identifiables (trafics, évasion fiscale)." },
+    { q:"La carrière déviante (Becker) comprend :", opts:["Le parcours scolaire d'un individu en difficulté","La transgression d'une norme → étiquetage → intégration dans un groupe déviant partageant les mêmes normes","L'ensemble des antécédents judiciaires d'un individu","Le processus de réinsertion après une peine de prison"], ans:1, exp:"Carrière déviante : processus progressif (1) transgression d'une norme, (2) étiquetage par le groupe, (3) intégration dans une sous-culture déviante. Chaque étape renforce la suivante." },
+  ],
+
+  /* ── SOC 1 : Liens sociaux ── */
+  "soc-1": [
+    { q:"Un groupe social se caractérise par :", opts:["Un simple rassemblement de personnes au même endroit","Des interactions entre membres, des normes et valeurs communes, et un sentiment d'appartenance collective","Un contrat signé entre plusieurs individus","Le partage du même code postal"], ans:1, exp:"Groupe social = interactions + sentiment d'appartenance. Ce n'est pas une foule (pas de sentiment d'appartenance) ni une simple association (pas forcément d'interactions quotidiennes)." },
+    { q:"La solidarité mécanique (Durkheim) caractérise :", opts:["Les sociétés industrielles contemporaines","Les sociétés traditionnelles où la cohésion repose sur la ressemblance entre individus et une forte conscience collective","Les sociétés fondées sur la division du travail","Les réseaux sociaux numériques"], ans:1, exp:"Solidarité mécanique (Durkheim) : sociétés traditionnelles, peu spécialisées. Cohésion = ressemblance (mêmes croyances, modes de vie). La conscience collective est forte." },
+    { q:"La solidarité organique (Durkheim) est fondée sur :", opts:["La ressemblance entre individus","L'interdépendance et la complémentarité entre individus spécialisés dans des activités différentes","La religion commune","Le partage d'un territoire national"], ans:1, exp:"Solidarité organique : sociétés modernes industrialisées. Cohésion = interdépendance résultant de la division du travail. Chaque individu a besoin des autres pour ses activités spécialisées." },
+    { q:"Serge Paugam définit quel type de lien social comme étant les liens de filiation ?", opts:["Les liens entre collègues de travail","Les liens entre parents et enfants créant une solidarité intergénérationnelle et une forte reconnaissance affective","Les liens entre citoyens d'une même nation","Les liens d'amitié choisis"], ans:1, exp:"Paugam définit 4 types de liens : filiation (parents-enfants), participation élective (amis, conjoint), participation organique (collègues), citoyenneté (communauté politique nationale)." },
+    { q:"La désaffiliation sociale est :", opts:["Le processus d'intégration dans un nouveau groupe","Le processus progressif d'exclusion d'un individu de la société par rupture des liens professionnels, familiaux ou amicaux (Castel)","Le passage de la solidarité mécanique à la solidarité organique","Le déménagement vers une autre région"], ans:1, exp:"Désaffiliation (Robert Castel) : processus cumulatif de perte des liens sociaux → exclusion sociale. Souvent déclenché par la perte d'emploi (perte de revenus + de liens professionnels)." },
+    { q:"Granovetter a montré que pour trouver un emploi :", opts:["Les liens forts (famille proche, amis intimes) sont les plus efficaces","Les liens faibles (connaissances, amis d'amis) sont souvent plus efficaces car ils donnent accès à des informations nouvelles hors de son réseau habituel","Les réseaux numériques sont inutiles","Le diplôme est le seul facteur déterminant"], ans:1, exp:"Granovetter (Getting a Job, 1974) : paradoxe de la force des liens faibles. Les liens faibles relient à des cercles sociaux différents, donnant accès à des informations et opportunités nouvelles." },
+    { q:"Les Professions et Catégories Socioprofessionnelles (PCS) sont :", opts:["Des groupes sociaux au sens strict","Des agrégats statistiques de l'INSEE regroupant les individus selon leur profession, secteur, statut, qualification","Des partis politiques","Des catégories juridiques définies par la loi"], ans:1, exp:"PCS ≠ groupes sociaux au sens strict (pas forcément d'interactions concrètes). Ce sont des outils statistiques de l'INSEE pour analyser la structure sociale et ses évolutions." },
+    { q:"La sociabilité numérique :", opts:["Remplace entièrement les liens sociaux traditionnels","Permet d'entretenir des liens déjà existants et de créer de nouveaux liens, contribuant à l'intégration et à la cohésion sociale","Développe exclusivement des liens forts","N'a aucun impact sur la vie sociale réelle"], ans:1, exp:"La sociabilité numérique (Web 2.0 : réseaux sociaux, messageries...) prolonge et enrichit les liens existants (famille, amis, collègues) et permet l'émergence de nouveaux groupes en ligne." },
+    { q:"La ségrégation urbaine désigne :", opts:["La construction de murs entre quartiers","La concentration de personnes en difficulté dans des quartiers défavorisés isolés du reste de la société, fragilisant les liens sociaux","L'organisation de la ville en zones commerciales et résidentielles","Le départ des classes moyennes vers les banlieues"], ans:1, exp:"Ségrégation urbaine = inégale répartition spatiale des populations selon le niveau social. Elle concentre les difficultés (chômage, précarité, faible diplôme) et renforce les processus d'exclusion." },
+    { q:"Les 8 grandes catégories des PCS en France incluent :", opts:["Ouvriers, employés, cadres, professions intermédiaires, artisans-commerçants, agriculteurs, retraités, personnes sans activité","Riches, pauvres, classe moyenne, élites, jeunes, vieux, actifs, inactifs","Managers, techniciens, secrétaires, ouvriers, fonctionnaires, libéraux, artisans, chômeurs","Aucune liste précise, les PCS varient chaque année"], ans:0, exp:"Les 8 PCS (INSEE) : agriculteurs exploitants, artisans/commerçants/chefs d'entreprise, cadres/professions intellectuelles sup., professions intermédiaires, employés, ouvriers, retraités, sans activité professionnelle." },
+  ],
+
+  /* ── SOC 2 : Socialisation ── */
+  "soc-2": [
+    { q:"La socialisation est :", opts:["L'apprentissage d'une langue étrangère","Le processus par lequel l'individu acquiert les normes, valeurs et comportements d'une société","La participation à des événements sociaux","L'appartenance à un groupe social"], ans:1, exp:"Socialisation = processus continu d'acquisition des normes, valeurs et comportements. Elle a lieu dès la naissance (famille) et se poursuit tout au long de la vie (école, travail, couple...)." },
+    { q:"La socialisation primaire a lieu :", opts:["Dans le monde professionnel","Pendant l'enfance et l'adolescence, principalement dans la famille et à l'école","À l'âge adulte dans le milieu du travail","À la retraite"], ans:1, exp:"Socialisation primaire = enfance/adolescence. C'est la période fondatrice où s'acquièrent les premières normes, valeurs et rôles sociaux, surtout via la famille et l'école." },
+    { q:"L'intériorisation est :", opts:["Un processus conscient d'apprentissage de règles","Un processus inconscient par lequel des normes et valeurs acquises deviennent naturelles et semblent innées à l'individu","La mémorisation de textes de loi","L'intégration à un groupe professionnel"], ans:1, exp:"Intériorisation : les normes et valeurs sociales acquises (imitation, inculcation, interaction) finissent par sembler naturelles. Ex : la politesse semble naturelle mais est apprise culturellement." },
+    { q:"La reproduction sociale désigne :", opts:["La natalité dans une société","Le processus par lequel les mêmes positions sociales se transmettent entre générations, lié à la socialisation différenciée","La copie des comportements des célébrités","La diffusion des innovations dans la société"], ans:1, exp:"Reproduction sociale (Bourdieu & Passeron, La Reproduction, 1970) : les inégalités sociales se perpétuent par la socialisation. Les enfants de milieux favorisés intériorisent mieux les codes scolaires." },
+    { q:"La socialisation différenciée selon le genre se manifeste par :", opts:["Des comportements identiques pour les filles et garçons","Des attitudes différentes des adultes (jouets, attentes, valeurs) envers filles et garçons, transmettant des rôles sociaux de genre","Un accès différencié à l'éducation uniquement","Des différences biologiques innées dans les comportements"], ans:1, exp:"Socialisation différenciée de genre (Belotti, 1971) : dès l'enfance, filles et garçons sont socialisés différemment (jouets, encouragements différents) → intériorisation de rôles de genre construits socialement." },
+    { q:"La socialisation professionnelle est :", opts:["La recherche d'un emploi","L'acquisition des valeurs, normes et comportements propres à un milieu professionnel","La formation académique dans une école professionnelle","Le diplôme obtenu pour exercer une profession"], ans:1, exp:"Socialisation professionnelle : en intégrant un métier, on apprend les codes informels du groupe (humour des chirurgiens, rigueur des juristes...). Elle peut modifier les valeurs et comportements acquis auparavant." },
+    { q:"Un rôle social est :", opts:["Un emploi occupé par un individu","Un ensemble de comportements socialement attendus d'un individu selon sa position dans la société","La réputation d'une personne","Le statut légal d'un individu"], ans:1, exp:"Rôle social = comportements attendus selon le statut occupé (parent, enseignant, médecin...). Les rôles s'apprennent par socialisation et varient selon les cultures et les époques." },
+    { q:"Bernard Lahire (L'Homme pluriel) montre que :", opts:["Les individus ont une identité sociale unique et stable","Au cours de leur vie, les individus fréquentent des groupes aux normes différentes, développant des dispositions multiples parfois contradictoires","La socialisation ne change jamais les valeurs initiales","L'identité sociale est déterminée exclusivement par la classe d'origine"], ans:1, exp:"Lahire : chaque individu est \"pluriel\" car il a été socialisé dans des contextes multiples (famille, école, sport, travail...) avec des normes parfois contradictoires, créant des dispositions variées." },
+    { q:"La socialisation conjugale consiste à :", opts:["Apprendre les règles du mariage civil","La transformation des normes, valeurs et habitudes de vie des individus au contact de leur conjoint","La décision de se marier","L'apprentissage des tâches ménagères"], ans:1, exp:"Socialisation conjugale : la cohabitation et la vie de couple transforment les habitudes (heure de lever, alimentation, réseau d'amis, répartition des tâches). C'est une socialisation secondaire importante." },
+    { q:"Qu'est-ce qu'une trajectoire improbable ?", opts:["Un parcours de vie médian statistiquement","Une trajectoire individuelle qui s'écarte de la trajectoire statistiquement la plus fréquente dans un milieu social donné (ex : ascension sociale depuis un milieu défavorisé)","Un parcours de vie chaotique","L'absence de mobilité sociale"], ans:1, exp:"Trajectoire improbable : certains individus (\"transfuges de classe\") s'écartent de la trajectoire attendue dans leur milieu. Ex : enfant de milieu populaire devenant cadre supérieur malgré les déterminismes statistiques." },
+  ],
+
+  /* ── REGARDS CROISÉS ── */
+  "rg-0": [
+    { q:"Le risque social et la déviance ont en commun :", opts:["Ils concernent uniquement les individus pauvres","Ils sont tous deux influencés par des variables sociales (âge, diplôme, milieu) et nécessitent une réponse collective","Ils sont uniquement de nature économique","Ils disparaissent avec le développement économique"], ans:1, exp:"Regards croisés : risques sociaux ET déviance sont plus fréquents dans les groupes sociaux fragilisés. Les deux nécessitent des mécanismes collectifs (protection sociale, contrôle social) pour y faire face." },
+    { q:"La ségrégation sociale (liens sociaux) et les asymétries d'information (marchés) ont en commun :", opts:["Ils n'ont aucun point commun","Ce sont des situations d'inégalité entre acteurs, menant à des défaillances : défaillance du marché d'un côté, affaiblissement de la cohésion sociale de l'autre","Ils sont tous deux résolus uniquement par l'État","Ils n'affectent que les pays en développement"], ans:1, exp:"Regards croisés éco-socio : asymétrie d'information = inégalité dans l'accès à l'information sur les marchés. Ségrégation sociale = inégalité dans l'accès aux ressources et aux espaces. Les deux créent des injustices nécessitant une régulation." },
+    { q:"Quel lien unit la socialisation et le vote ?", opts:["Aucun lien","La socialisation politique détermine en partie les préférences électorales (famille, milieu professionnel), illustrant le modèle de Columbia","Le vote est uniquement influencé par les médias","La socialisation n'influence que les comportements économiques"], ans:1, exp:"Regards croisés soc-pol : la socialisation politique (famille, milieu) est au cœur du modèle de Columbia. La réduction de son poids explique la volatilité électorale croissante et la montée du vote sur enjeux." },
+    { q:"Comment l'aléa moral (économie) et la déviance (sociologie) sont-ils liés ?", opts:["Ils n'ont aucun rapport","Ce sont deux manifestations d'un comportement déviant par rapport aux normes d'un groupe (assureurs/société), favorisé par une protection (assurance/impunité)","L'aléa moral est un concept juridique, la déviance un concept médical","Les deux concernent uniquement les crimes financiers"], ans:1, exp:"Regards croisés : dans les deux cas, un individu modifie son comportement quand les conséquences négatives sont atténuées. L'aléa moral en assurance et la déviance sont tous deux des formes de transgression de normes liées à l'asymétrie de situation." },
+    { q:"Le lien entre protection sociale et liens sociaux est :", opts:["La protection sociale n'a aucun effet sur les liens sociaux","La protection sociale (logique d'assistance) maintient le lien social en évitant la désaffiliation des personnes en difficulté (RSA, allocations chômage)","La protection sociale affaiblit les liens familiaux","La protection sociale ne concerne que les risques économiques"], ans:1, exp:"Regards croisés éco-socio : la protection sociale joue un rôle intégrateur. En évitant la pauvreté extrême et l'exclusion (RSA, CMU, allocations chômage), elle maintient les conditions d'une intégration sociale et d'une cohésion sociale." },
+    { q:"Comment la volatilité électorale (sciences politiques) est-elle liée aux transformations sociales (sciences sociales) ?", opts:["Il n'y a aucun lien entre les deux","La volatilité électorale résulte des transformations structurelles de la société : désindustrialisation, hausse des diplômes, identités multiples → affaiblissement des variables lourdes et de l'identification partisane","La volatilité électorale est uniquement due aux médias","La volatilité électorale est un phénomène politique autonome"], ans:1, exp:"Regards croisés : la désindustrialisation (disparition de l'identité ouvrière), la hausse du niveau d'éducation et la complexification des identités sociales (Lahire, L'Homme pluriel) affaiblissent les déterminants sociaux du vote." },
+    { q:"Quel est le lien entre sondages d'opinion et défaillances du marché de l'information ?", opts:["Aucun lien","Les sondages illustrent une asymétrie d'information : les instituts et commanditaires ont accès à des données que le grand public n'a pas, pouvant orienter l'opinion","Les sondages sont un bien collectif","Les sondages réduisent toujours les asymétries d'information"], ans:1, exp:"Regards croisés éco-pol : les commanditaires de sondages (partis, entreprises) commandent des études stratégiques non publiées. La formulation des questions crée une asymétrie entre producteurs et consommateurs d'information électorale." },
+    { q:"Quel lien unit la logique d'assistance et la cohésion sociale ?", opts:["L'assistance affaiblit la cohésion sociale car elle décourage le travail","L'assistance (RSA, C2S, bourses) maintient un minimum de ressources pour tous, réduisant les inégalités et limitant la désaffiliation, renforçant ainsi la cohésion sociale","L'assistance est une logique purement économique sans effet social","La cohésion sociale se crée uniquement par le marché"], ans:1, exp:"Regards croisés : la logique d'assistance (redistribution verticale : riches → pauvres) est un outil de cohésion sociale. Elle garantit un minimum vital, limite la ségrégation et prévient les processus de désaffiliation (Castel)." },
+    { q:"En quoi l'abstentionnisme et l'exclusion sociale sont-ils liés ?", opts:["Ils n'ont aucun lien","Les individus socialement exclus (chômeurs, précaires, peu diplômés) s'abstiennent davantage car ils ont un faible sentiment de compétence politique et moins de raisons de se sentir représentés par le système","L'abstentionnisme est un phénomène uniquement lié à l'âge","L'exclusion sociale favorise une plus forte participation politique"], ans:1, exp:"Regards croisés soc-pol : l'exclusion sociale (chômage, précarité, faible intégration) corrèle avec l'abstentionnisme (passif). Les individus marginalisés se sentent moins représentés et moins compétents politiquement (sentiment de compétence politique faible)." },
+    { q:"Quel concept relie la déviance, le contrôle social et l'opinion publique ?", opts:["Le concept de marché","Les normes sociales : la déviance transgresse les normes, le contrôle social les fait respecter, et l'opinion publique reflète et façonne les normes dominantes d'une société","Le concept de solidarité organique","Le concept d'asymétrie d'information"], ans:1, exp:"Regards croisés transversal : les normes sont au cœur des 3 concepts. La déviance = transgression des normes ; contrôle social = respect des normes ; opinion publique = expression collective des normes et valeurs dominantes d'une société à un moment donné." },
+  ],
+};
+
+/* ══ STATE ══ */
+let currentTheme = "";
+let currentChapter = "";
+let questions = [];
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+/* ══ NAV ══ */
+function showChapters(theme){
+  currentTheme = theme;
+  const t = THEMES[theme];
+  document.getElementById("cs-title").textContent = t.label;
+  document.getElementById("cs-title").style.color = t.color;
+  const list = document.getElementById("chapter-list");
+  list.innerHTML = "";
+  t.chapters.forEach((ch,i)=>{
+    const btn = document.createElement("button");
+    btn.className = "chap-btn";
+    btn.innerHTML = `${ch}<span style="color:${t.color}">${QUESTIONS[theme+"-"+i]?.length||0} questions</span>`;
+    btn.onclick = ()=>startQuiz(theme,i);
+    list.appendChild(btn);
+  });
+  show("chapter-select");
+}
+function startQuiz(theme,idx){
+  currentChapter = theme+"-"+idx;
+  const qs = [...(QUESTIONS[currentChapter]||[])];
+  // Shuffle
+  for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}
+  questions = qs;
+  currentQ = 0; score = 0;
+  document.getElementById("prog").style.background = THEMES[theme].color;
+  show("quiz"); renderQuestion();
+}
+function goHome(){ show("home"); }
+function goBack(){ show("chapter-select"); }
+
+/* ══ RENDER ══ */
+function renderQuestion(){
+  answered = false;
+  const q = questions[currentQ];
+  const total = questions.length;
+  document.getElementById("q-counter").textContent = `Question ${currentQ+1} / ${total}`;
+  document.getElementById("prog").style.width = ((currentQ)/total*100)+"%";
+  document.getElementById("q-text").textContent = q.q;
+  document.getElementById("expl").style.display = "none";
+  document.getElementById("next-btn").style.display = "none";
+
+  const optDiv = document.getElementById("options");
+  optDiv.innerHTML = "";
+  q.opts.forEach((o,i)=>{
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.textContent = o;
+    btn.onclick = ()=>selectAnswer(i, btn);
+    optDiv.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx, btn){
+  if(answered) return;
+  answered = true;
+  const q = questions[currentQ];
+  const allBtns = document.querySelectorAll(".opt-btn");
+  allBtns.forEach(b=>b.disabled=true);
+
+  if(idx===q.ans){
+    btn.classList.add("correct");
+    score++;
+  } else {
+    btn.classList.add("wrong");
+    allBtns[q.ans].classList.add("reveal");
+  }
+  const expl = document.getElementById("expl");
+  expl.innerHTML = `<strong>💡 Explication :</strong> ${q.exp}`;
+  expl.style.display = "block";
+
+  const nextBtn = document.getElementById("next-btn");
+  nextBtn.style.display = "inline-block";
+  nextBtn.style.background = THEMES[currentTheme].color;
+  nextBtn.style.color = "#fff";
+
+  if(currentQ===questions.length-1){
+    nextBtn.textContent = "Voir mes résultats 🎯";
+  } else {
+    nextBtn.textContent = "Question suivante →";
+  }
+}
+
+function nextQuestion(){
+  currentQ++;
+  if(currentQ>=questions.length){ showResult(); return; }
+  renderQuestion();
+}
+
+/* ══ RESULT ══ */
+function showResult(){
+  const total = questions.length;
+  const note = Math.round((score/total)*20*10)/10;
+  const circle = document.getElementById("score-circle");
+  circle.style.borderColor = note>=14?"var(--correct)": note>=10?"var(--rg)":"var(--wrong)";
+  document.getElementById("score-num").textContent = note;
+  document.getElementById("res-title").textContent = note>=18?"🏆 Excellent !" : note>=14?"🎉 Très bien !" : note>=10?"📖 Continue tes révisions !" : "💪 Il faut retravailler ce chapitre !";
+  document.getElementById("res-sub").textContent = `${score} bonne${score>1?"s":""} réponse${score>1?"s":""} sur ${total}`;
+  const msgs = {
+    18:"Tu maîtrises parfaitement ce chapitre, bravo !",
+    14:"Bonne maîtrise ! Quelques points à consolider.",
+    10:"Pas mal, mais relis tes cours pour les points manqués.",
+    0:"N'hésite pas à relire le cours et à réessayer !"
+  };
+  document.getElementById("res-msg").textContent = note>=18?msgs[18]:note>=14?msgs[14]:note>=10?msgs[10]:msgs[0];
+  show("result");
+}
+
+function retryQuiz(){
+  const parts = currentChapter.split("-");
+  startQuiz(parts[0], parseInt(parts[1]));
+}
+
+/* ══ UTILS ══ */
+function show(id){
+  ["home","chapter-select","quiz","result"].forEach(s=>{
+    const el = document.getElementById(s);
+    el.style.display = s===id ? (s==="result"?"flex":"block") : "none";
+  });
+}
+</script>
+</body>
+</html>
